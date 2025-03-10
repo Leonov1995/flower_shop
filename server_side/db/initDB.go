@@ -12,12 +12,11 @@ type Database struct {
 	db *sql.DB
 }
 
-// type UpdaterDB interface {
-// 	UpdateQuantityAndCost() error
-// 	UpdateDecorationCost() error
-// } куда можно?
-
 func Init(params []string) (*Database, error) {
+	if len(params) < 6 {
+		return nil, fmt.Errorf("not enough parameters provided")
+	}
+
 	host, port, user, password, dbname, sslmode := params[0], params[1], params[2], params[3], params[4], params[5]
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
@@ -32,7 +31,7 @@ func Init(params []string) (*Database, error) {
 		return nil, fmt.Errorf("error connecting to the database: %w", err)
 	}
 
-	slog.Info("successfully connected to the database!")
+	slog.Info("connected to the database")
 
 	return &Database{db: db}, nil
 }
@@ -41,5 +40,11 @@ func (d *Database) Close() error {
 	if err := d.db.Close(); err != nil {
 		return fmt.Errorf("error closing database: %w", err)
 	}
+	slog.Info("database connection successfully closed")
 	return nil
 }
+
+// type UpdaterDB interface {
+// 	UpdateQuantityAndCost() error
+// 	UpdateDecorationCost() error
+// } куда можно?

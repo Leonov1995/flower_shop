@@ -3,32 +3,36 @@ package order
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"server/db"
 	"server/models"
 )
 
 type OrderManager struct {
-	Db *db.Database
+	DB *db.Database
 }
 
 func (om *OrderManager) handleBouquetsRequest(orderData []byte) ([]byte, error) {
 	bouquets, err := parseBouquets(orderData)
 	if err != nil {
+		slog.Error("error parsing bouquets", "error", err)
 		return nil, err
 	}
 
 	checkedBouquets, err := om.updateBouquets(bouquets)
 	if err != nil {
+		slog.Error("error updating bouquets", "error", err)
 		return nil, err
 	}
 
 	handledOrder, err := json.MarshalIndent(checkedBouquets, "", "   ")
 	if err != nil {
+		slog.Error("error marshaling checked bouquets to json", "error", err)
 		return nil, err
 	}
 
+	slog.Info("bouquets request handled successfully")
 	return handledOrder, nil
 }
 
@@ -44,17 +48,18 @@ func (om *OrderManager) updateBouquets(bouquets []models.Bouquet) ([]models.Bouq
 	for i := range bouquets {
 		bouquet := &bouquets[i]
 
-		for j := range bouquet.Flowers {
-			flower := &bouquet.Flowers[j]
-			if err := om.validateFlowersQtyAndCost(flower, &bouquet.Cost); err != nil {
-				log.Printf("Ошибка при валидации цветка %s: %v", flower.Name, err)
+		for j := range bouquet.FlowerList {
+			flower := &bouquet.FlowerList[j]
+			if err := om.validateFlowersQtyAndCost(flower, &bouquet.BouquetCost); err != nil {
+				slog.Error("error validating flower", "name", flower.Name, "error", err)
 			}
-			log.Println(flower)
-			fmt.Printf("Обновлено: %s - Количество: %d, Стоимость: %d, Общая стоимость: %d\n", flower.Name, flower.Quantity, flower.Cost, bouquet.Cost)
+			slog.Info("flower updated", "name", flower.Name, "quantity", flower.Quantity, "cost", flower.Cost)
+			fmt.Printf("updated: %s - quantity: %d, cost: %d\n", flower.Name, flower.Quantity, flower.Cost)
 		}
+		fmt.Printf("%d bouquet total cost: %d\n", i+1, bouquet.BouquetCost)
 
-		if err := om.decorationCost(bouquet, &bouquet.Cost); err != nil {
-			log.Printf("Ошибка при обновлении стоимости дополнений для букета: %v", err)
+		if err := om.decorationCost(bouquet, &bouquet.BouquetCost); err != nil {
+			slog.Error("error updating decoration cost for bouquet", "error", err)
 		}
 	}
 
@@ -66,11 +71,11 @@ func (om *OrderManager) decorationCost(bouquet *models.Bouquet, totalCost *int) 
 	if err != nil {
 		return err
 	}
-	bouquet.Decoration.Postcard.Price = postcardPrice
-	bouquet.Decoration.Pack.Price = packPrice
-	bouquet.Decoration.Cost = postcardPrice + packPrice
+	bouquet.Decoration.Postcard.Cost = postcardPrice
+	bouquet.Decoration.Pack.Cost = packPrice
+	bouquet.Decoration.DecorationCost = postcardPrice + packPrice
 
-	updateTotalCost(totalCost, bouquet.Decoration.Cost)
+	updateTotalCost(totalCost, bouquet.Decoration.DecorationCost)
 
 	return nil
 }
@@ -81,9 +86,9 @@ func (om *OrderManager) validateFlowersQtyAndCost(flower *models.Flower, totalCo
 	}
 
 	fullFlowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
-	log.Printf("Количество для %s обновлено на %d", fullFlowerName, flower.Quantity)
+	slog.Info("quantity updated", "flower", fullFlowerName, "quantity", flower.Quantity)
 
-	log.Printf("Qty: %d, C: %d", flower.Quantity, flower.Cost)
+	slog.Info("flower cost info", "quantity", flower.Quantity, "cost", flower.Cost)
 
 	updateTotalCost(totalCost, flower.Cost)
 
@@ -92,15 +97,5 @@ func (om *OrderManager) validateFlowersQtyAndCost(flower *models.Flower, totalCo
 
 func updateTotalCost(totalCost *int, amount int) {
 	*totalCost += amount
+	slog.Debug("total cost updated", "newTotalCost", *totalCost)
 }
-
-// func (db *OrderManager) validateQuantityAndCost(flower *models.Flower) (*models.Flower, error) {
-// 	fullFlowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
-
-// 	availQty, cost, err := db.GetFlowerAvailQtyAndCost(flower.Name, flower.Color, flower.Quantity)
-// 	log.Printf("Количество для %s обновлено на %d", fullFlowerName, availQty)
-
-// 	flower.Cost, flower.Quantity = cost, availQty
-
-// 	return flower, err
-// }
