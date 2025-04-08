@@ -1,26 +1,16 @@
-package order
+package businesslogic
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 
-	"server/db"
 	"server/models"
 )
 
-type OrderManager struct {
-	DB *db.Database
-}
-
-func (om *OrderManager) handleBouquetsRequest(orderData []byte) ([]byte, error) {
-	bouquets, err := parseBouquets(orderData)
-	if err != nil {
-		slog.Error("error parsing bouquets", "error", err)
-		return nil, err
-	}
-
-	checkedBouquets, err := om.updateBouquets(bouquets)
+func (om *OrderManager) handleBouquetsRequest(ctx context.Context, rawOrderData models.Order) ([]byte, error) {
+	checkedBouquets, err := om.updateBouquets(rawOrderData.BouquetsList)
 	if err != nil {
 		slog.Error("error updating bouquets", "error", err)
 		return nil, err
@@ -36,14 +26,6 @@ func (om *OrderManager) handleBouquetsRequest(orderData []byte) ([]byte, error) 
 	return handledOrder, nil
 }
 
-func parseBouquets(orderData []byte) ([]models.Bouquet, error) {
-	var bouquets []models.Bouquet
-	if err := json.Unmarshal(orderData, &bouquets); err != nil {
-		return nil, err
-	}
-	return bouquets, nil
-}
-
 func (om *OrderManager) updateBouquets(bouquets []models.Bouquet) ([]models.Bouquet, error) {
 	for i := range bouquets {
 		bouquet := &bouquets[i]
@@ -51,19 +33,36 @@ func (om *OrderManager) updateBouquets(bouquets []models.Bouquet) ([]models.Bouq
 		for j := range bouquet.FlowerList {
 			flower := &bouquet.FlowerList[j]
 			if err := om.validateFlowersQtyAndCost(flower, &bouquet.BouquetCost); err != nil {
-				slog.Error("error validating flower", "name", flower.Name, "error", err)
+				slog.Error("error validating flower", "flower", flower.Name+" "+flower.Color, "error", err)
 			}
-			slog.Info("flower updated", "name", flower.Name, "quantity", flower.Quantity, "cost", flower.Cost)
-			fmt.Printf("updated: %s - quantity: %d, cost: %d\n", flower.Name, flower.Quantity, flower.Cost)
+			fullFlowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
+			slog.Info("flower updated", "name", fullFlowerName, "quantity", flower.Quantity, "cost", flower.Cost)
+			updateBouquetCost(om, bouquet)
 		}
-		fmt.Printf("%d bouquet total cost: %d\n", i+1, bouquet.BouquetCost)
 
-		if err := om.decorationCost(bouquet, &bouquet.BouquetCost); err != nil {
-			slog.Error("error updating decoration cost for bouquet", "error", err)
-		}
+		// if bouquet.BouquetCost != 0 {
+		// 	if err := om.decorationCost(bouquet, &bouquet.BouquetCost); err != nil {
+		// 		slog.Error("error updating decoration cost for bouquet", "error", err)
+		// 	}
+		// } else {
+		// 	slog.Error("zero-price bouquet")
+		// }
+
+		fmt.Printf("%d bouquet total cost: %d\n", i+1, bouquet.BouquetCost)
 	}
 
 	return bouquets, nil
+}
+
+func updateBouquetCost(om *OrderManager, bouquet *models.Bouquet) {
+	if bouquet.BouquetCost == 0 {
+		slog.Error("zero-price bouquet")
+		return
+	}
+
+	if err := om.decorationCost(bouquet, &bouquet.BouquetCost); err != nil {
+		slog.Error("error updating decoration cost for bouquet", "error", err)
+	}
 }
 
 func (om *OrderManager) decorationCost(bouquet *models.Bouquet, totalCost *int) error {
@@ -86,9 +85,8 @@ func (om *OrderManager) validateFlowersQtyAndCost(flower *models.Flower, totalCo
 	}
 
 	fullFlowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
-	slog.Info("quantity updated", "flower", fullFlowerName, "quantity", flower.Quantity)
 
-	slog.Info("flower cost info", "quantity", flower.Quantity, "cost", flower.Cost)
+	slog.Info(fmt.Sprintf("'%s' - quantity: %d, cost: %d", fullFlowerName, flower.Quantity, flower.Cost))
 
 	updateTotalCost(totalCost, flower.Cost)
 

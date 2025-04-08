@@ -1,4 +1,4 @@
-package order
+package businesslogic
 
 import (
 	"fmt"
@@ -9,15 +9,15 @@ import (
 func (om *OrderManager) GetFlowerAvailQtyAndCost(flower *models.Flower) error {
 	flowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
 
-	slog.Info("getting flower availability and cost", "flowerName", flowerName)
+	slog.Info(fmt.Sprintf("getting %s availability and cost", flowerName))
 
-	availQty, price, err := om.DB.GetFlowerQtyAndPrice(flower.Name, flower.Color)
+	availQty, cost, err := om.DB.GetFlowerQtyAndCost(flower.Name, flower.Color)
 	if err != nil {
-		slog.Error("error getting flower quantity and price", "error", err)
+		slog.Error("error getting flower quantity and cost", "error", err)
 		return err
 	}
 
-	slog.Info("available quantity and price retrieved", "availableQuantity", availQty, "price", price)
+	slog.Info("available quantity and cost retrieved", "availableQuantity", availQty, "cost", cost)
 
 	validateQuantity(flower, availQty)
 
@@ -26,17 +26,18 @@ func (om *OrderManager) GetFlowerAvailQtyAndCost(flower *models.Flower) error {
 		return fmt.Errorf("failed to update quantity for '%s': %w", flowerName, err)
 	}
 
-	flower.Cost = price * flower.Quantity
-	slog.Info("flower cost calculated", "flowerName", flowerName, "cost", flower.Cost)
+	flower.Cost = cost * flower.Quantity
+	// slog.Info("flower cost calculated", "flowerName", flowerName, "cost", flower.Cost)
 	return nil
 }
 
 func validateQuantity(flower *models.Flower, availableQuantity int) {
-	slog.Info("validating quantity", "flower", flower.Name+" "+flower.Color, "currentQuantity", flower.Quantity, "availableQuantity", availableQuantity)
+	flowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
+	slog.Info("validating quantity", "flower", flowerName, "orderedQuantity", flower.Quantity, "availableQuantity", availableQuantity)
 
 	if flower.Quantity > availableQuantity {
 		flower.Quantity = availableQuantity
 		flower.ErrorMessage = fmt.Sprintf("доступно %d шт.", availableQuantity)
-		slog.Warn("quantity adjusted", "flower", flower.Name+" "+flower.Color, "adjustedQuantity", flower.Quantity)
+		slog.Warn("quantity adjusted", "flower", flowerName, "adjustedQuantity", flower.Quantity)
 	}
 }

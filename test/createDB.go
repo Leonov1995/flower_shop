@@ -1,43 +1,86 @@
-package test
-
-func t() {
-
-}
+package tester
 
 // import (
+// 	"database/sql"
 // 	"encoding/json"
-// 	"models"
+// 	"fmt"
+// 	"log"
 // )
+
+// type Postcard struct {
+// 	Message string `json:"message"`
+// 	Cost    int    `json:"cost,omitempty"`
+// }
+
+// type Pack struct {
+// 	Material string `json:"material"`
+// 	Cost     int    `json:"cost,omitempty"`
+// }
+
+// type Decoration struct {
+// 	Postcard       Postcard `json:"postcard"`
+// 	Pack           Pack     `json:"pack"`
+// 	DecorationCost int      `json:"decorationCost,omitempty"`
+// }
+
+// type Flower struct {
+// 	Name         string `json:"name"`
+// 	Color        string `json:"color"`
+// 	Quantity     int    `json:"quantity,omitempty"`
+// 	Cost         int    `json:"cost,omitempty"`
+// 	ErrorMessage string `json:"errorMessage,omitempty"`
+// }
+
+// type Bouquet struct {
+// 	Position    int        `json:"position"`
+// 	FlowerList  []Flower   `json:"bouquet"`
+// 	Decoration  Decoration `json:"decoration"`
+// 	BouquetCost int        `json:"bouquetCost,omitempty"`
+// }
+
+// type Order struct {
+// 	ID            int       `json:"orderID,omitempty"`
+// 	BouquetsList  []Bouquet `json:"bouquetsList"`
+// 	OrderCost     int       `json:"orderCost,omitempty"`
+// 	PaymentStatus string    `json:"status,omitempty"`
+// 	PaymentID     int       `json:"paymentID,omitempty"`
+// }
+
+// type Payment struct {
+// 	OrderID   int  `json:"orderID,omitempty"`
+// 	IsPaid    bool `json:"IsPaid"`
+// 	PaymentID int  `json:"paymentID,omitempty"`
+// }
 
 // var id int
 // var flowers, postcards, packs = initializeData()
 
 // func makeOrder() ([]byte, error) {
-// 	flowers1 := []models.Flower{flowers["yellowRose"], flowers["yellowLily"]}
+// 	flowers1 := []Flower{flowers["yellowRose"], flowers["yellowLily"]}
 // 	flowers1[0].Quantity, flowers1[1].Quantity = 3, 4
-// 	decoration1 := models.Decoration{Postcard: postcards["womenDay"], Pack: packs["craft"]}
+// 	decoration1 := Decoration{Postcard: postcards["womenDay"], Pack: packs["craft"]}
 // 	price1 := bouquetPrice(flowers1, decoration1)
 
-// 	flowers2 := []models.Flower{flowers["daisy"], flowers["whitePion"]}
+// 	flowers2 := []Flower{flowers["daisy"], flowers["whitePion"]}
 // 	flowers2[0].Quantity, flowers2[1].Quantity = 50, 5
-// 	decoration2 := models.Decoration{Postcard: postcards["valentineDay"], Pack: packs["tape"]}
+// 	decoration2 := Decoration{Postcard: postcards["valentineDay"], Pack: packs["tape"]}
 // 	price2 := bouquetPrice(flowers2, decoration2)
 
-// 	bouquet1 := models.Bouquet{
+// 	bouquet1 := Bouquet{
 // 		Position:   nextID(),
 // 		Flowers:    flowers1,
 // 		Cost:       price1,
 // 		Decoration: decoration1,
 // 	}
 
-// 	bouquet2 := models.Bouquet{
+// 	bouquet2 := Bouquet{
 // 		Position:   nextID(),
 // 		Flowers:    flowers2,
 // 		Cost:       price2,
 // 		Decoration: decoration2,
 // 	}
 
-// 	bouquets := make([]models.Bouquet, 0)
+// 	bouquets := make([]Bouquet, 0)
 // 	bouquets = append(bouquets, bouquet1, bouquet2)
 
 // 	jsonData, err := json.MarshalIndent(bouquets, "", "   ")
@@ -52,7 +95,7 @@ func t() {
 // 	return id
 // }
 
-// func bouquetPrice(flowersAr []models.Flower, decoration models.Decoration) (price int) {
+// func bouquetPrice(flowersAr []Flower, decoration Decoration) (price int) {
 // 	for _, flower := range flowersAr {
 // 		price += flower.Cost * flower.Quantity
 // 	}
@@ -60,8 +103,8 @@ func t() {
 // 	return price
 // }
 
-// func initializeData() (map[string]models.Flower, map[string]models.Postcard, map[string]models.Pack) {
-// 	flowers := map[string]models.Flower{
+// func initializeData() (map[string]Flower, map[string]Postcard, map[string]Pack) {
+// 	flowers := map[string]Flower{
 // 		"redRose":    {Name: "Роза", Color: "Красная", Cost: 80, Quantity: 20},
 // 		"whiteRose":  {Name: "Роза", Color: "Белая", Cost: 60, Quantity: 20},
 // 		"yellowRose": {Name: "Роза", Color: "Жёлтая", Cost: 40, Quantity: 20},
@@ -73,7 +116,7 @@ func t() {
 // 		"daisy":      {Name: "Ромашка", Color: "Белая", Cost: 20, Quantity: 50},
 // 	}
 
-// 	postcards := map[string]models.Postcard{
+// 	postcards := map[string]Postcard{
 // 		"birthday":         {Message: "С Днём рождения!", Price: 5},
 // 		"newYear":          {Message: "С Новым Годом!", Price: 1},
 // 		"happyWedding":     {Message: "Со свадьбой!", Price: 2},
@@ -82,7 +125,7 @@ func t() {
 // 		"valentineDay":     {Message: "С Днём Влюбленных!", Price: 20},
 // 	}
 
-// 	packs := map[string]models.Pack{
+// 	packs := map[string]Pack{
 // 		"craft": {Material: "Крафт", Price: 100},
 // 		"film":  {Material: "Плёнка", Price: 50},
 // 		"tape":  {Material: "Лента", Price: 10},

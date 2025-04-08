@@ -1,14 +1,30 @@
-package order
+package businesslogic
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"server/db"
 	"server/models"
 )
 
-func (om *OrderManager) ParseOrder(rawOrder []byte) (models.Order, error) {
+type OrderManager struct {
+	DB *db.Database
+}
 
-	checkedOrder, err := om.handleBouquetsRequest(rawOrder)
+func ProcessOrder(ctx context.Context, db *db.Database, rawOrderData models.Order) (models.Order, error) {
+	om := OrderManager{DB: db}
+	order, err := om.ParseOrder(ctx, rawOrderData)
+	if err != nil {
+		return models.Order{}, err
+	}
+
+	return order, nil
+}
+
+func (om *OrderManager) ParseOrder(ctx context.Context, rawOrderData models.Order) (models.Order, error) {
+	checkedOrder, err := om.handleBouquetsRequest(ctx, rawOrderData)
 	if err != nil {
 		slog.Error("error handling bouquets request", "error", err)
 		return models.Order{}, err
@@ -72,4 +88,12 @@ func calculateTotalCost(bouquets []models.Bouquet) (totalCost int) {
 		totalCost += bouquet.BouquetCost
 	}
 	return
+}
+
+func parseBouquets(orderData []byte) ([]models.Bouquet, error) {
+	var bouquets []models.Bouquet
+	if err := json.Unmarshal(orderData, &bouquets); err != nil {
+		return nil, err
+	}
+	return bouquets, nil
 }
