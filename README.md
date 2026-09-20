@@ -15,7 +15,7 @@
 
 ## Архитектура приложения
 
-![Схема архитектуры](https://github.com/RoiDuNord/flower_shop/blob/master/architecture-diagram.svg)
+![Схема архитектуры](https://github.com/Leonov1995/flower_shop/blob/main/architecture-diagram.svg)
 
 ## Предварительные требования
 
@@ -38,7 +38,7 @@ docker info
 1. Клонируйте проект на ваш компьютер из Github с помощью команды
 
 ```
-git clone https://github.com/RoiDuNord/flower_shop.git
+git clone https://github.com/Leonov1995/flower_shop.git
 ```
 
 2. Перейдите в директорию сервера и запустите приложение с помощью Docker Compose
